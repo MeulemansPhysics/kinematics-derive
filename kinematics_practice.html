@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kinematics: Deriving Expressions</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff;
+    --bg2: #f5f5f3;
+    --bg3: #eeede8;
+    --text: #1a1a1a;
+    --text2: #666660;
+    --text3: #999994;
+    --border: rgba(0,0,0,0.12);
+    --border2: rgba(0,0,0,0.22);
+    --radius: 8px;
+    --radius-lg: 12px;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --mono: "SFMono-Regular", "Consolas", "Liberation Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1e1e1c;
+      --bg2: #2a2a28;
+      --bg3: #323230;
+      --text: #f0f0ee;
+      --text2: #aaaaaa;
+      --text3: #777774;
+      --border: rgba(255,255,255,0.12);
+      --border2: rgba(255,255,255,0.22);
+    }
+  }
+  body { font-family: var(--font); background: var(--bg3); color: var(--text); min-height: 100vh; }
+  .page { max-width: 740px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+  .top-bar { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1rem; }
+  .title { font-size: 20px; font-weight: 600; color: var(--text); }
+  .score-pill { font-size: 13px; padding: 4px 14px; border-radius: 20px; background: var(--bg2); color: var(--text2); font-weight: 500; border: 0.5px solid var(--border); }
+  .eqn-ref { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: .65rem 1rem; margin-bottom: 1rem; }
+  .eqn-ref-title { font-size: 11px; color: var(--text3); margin-bottom: 5px; letter-spacing: .04em; text-transform: uppercase; }
+  .eqn-list { display: flex; flex-wrap: wrap; gap: 4px 20px; }
+  .eqn-item { font-family: var(--mono); font-size: 12px; color: var(--text); }
+  .palette { border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: .85rem 1rem; margin-bottom: 1rem; background: var(--bg); }
+  .palette-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: .7rem; }
+  .palette-title { font-size: 11px; color: var(--text3); letter-spacing: .04em; text-transform: uppercase; }
+  .mode-toggle { display: flex; border: 0.5px solid var(--border2); border-radius: var(--radius); overflow: hidden; }
+  .mode-btn { font-size: 12px; padding: 5px 14px; background: transparent; border: none; color: var(--text2); cursor: pointer; font-family: var(--font); }
+  .mode-btn.active { background: var(--bg2); color: var(--text); font-weight: 500; }
+  .palette-sections { display: flex; flex-direction: column; gap: .5rem; }
+  .palette-section { display: flex; align-items: flex-start; gap: 8px; }
+  .palette-label { font-size: 11px; color: var(--text3); padding-top: 7px; min-width: 68px; flex-shrink: 0; }
+  .palette-tokens { display: flex; flex-wrap: wrap; gap: 5px; }
+  .token { display: inline-flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 13px; padding: 5px 11px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg2); color: var(--text); user-select: none; min-width: 30px; transition: background .1s; }
+  .drag-mode .token { cursor: grab; }
+  .drag-mode .token:active { cursor: grabbing; }
+  .type-mode .token { cursor: pointer; }
+  .type-mode .token:hover, .drag-mode .token:hover { background: var(--bg); border-color: var(--border2); }
+  .token.dragging { opacity: .35; }
+  .type-hint { font-size: 11px; color: var(--text3); margin-top: .45rem; line-height: 1.6; }
+  .type-hint code { font-family: var(--mono); background: var(--bg2); padding: 1px 5px; border-radius: 4px; }
+  .filter-row { display: flex; gap: 6px; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
+  .filter-lbl { font-size: 12px; color: var(--text3); }
+  .filter-btn { font-size: 12px; padding: 5px 14px; border-radius: 20px; border: 0.5px solid var(--border); background: transparent; color: var(--text2); cursor: pointer; font-family: var(--font); transition: background .1s; }
+  .filter-btn:hover { background: var(--bg2); }
+  .filter-btn.on { background: var(--bg2); color: var(--text); border-color: var(--border2); font-weight: 500; }
+  .q-count-lbl { font-size: 13px; color: var(--text3); margin-bottom: .65rem; display: block; }
+  .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.35rem; margin-bottom: 1rem; }
+  .scenario-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 1rem; }
+  .scenario-text { font-size: 15px; color: var(--text); line-height: 1.65; flex: 1; }
+  .badge { font-size: 11px; font-weight: 600; padding: 3px 11px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+  .badge-ua { background: #dbeafe; color: #1e40af; }
+  .badge-ff { background: #d1fae5; color: #065f46; }
+  .badge-cv { background: #fef3c7; color: #92400e; }
+  .badge-2b { background: #fce7f3; color: #9d174d; }
+  @media (prefers-color-scheme: dark) {
+    .badge-ua { background: #1e3a5f; color: #93c5fd; }
+    .badge-ff { background: #064e3b; color: #6ee7b7; }
+    .badge-cv { background: #451a03; color: #fcd34d; }
+    .badge-2b { background: #500724; color: #f9a8d4; }
+  }
+  .hint-row { display: flex; gap: 8px; margin-bottom: .8rem; flex-wrap: wrap; }
+  .reveal-btn { font-size: 12px; padding: 5px 13px; border-radius: 20px; border: 0.5px solid var(--border); background: transparent; color: var(--text2); cursor: pointer; font-family: var(--font); }
+  .reveal-btn:hover { background: var(--bg2); }
+  .reveal-box { font-size: 13px; padding: 9px 13px; border-radius: var(--radius); background: var(--bg2); border: 0.5px solid var(--border); color: var(--text); margin-bottom: .8rem; display: none; line-height: 1.7; }
+  .reveal-box.shown { display: block; }
+  .var-pill { display: inline-block; font-family: var(--mono); font-size: 12px; background: var(--bg); border: 0.5px solid var(--border2); border-radius: 12px; padding: 1px 9px; margin: 2px 3px; color: var(--text); }
+  .q-block { margin-bottom: 1.1rem; padding-bottom: 1.1rem; border-bottom: 0.5px solid var(--border); }
+  .q-block:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .q-label { font-size: 14px; color: var(--text); margin-bottom: .5rem; line-height: 1.55; }
+  .q-sub { font-size: 12px; color: var(--text3); margin-bottom: .5rem; }
+  .answer-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+  .ans-lhs { font-family: var(--mono); font-size: 13px; color: var(--text2); white-space: nowrap; }
+  .drop-zone { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; min-height: 38px; min-width: 80px; padding: 4px 8px; border-radius: var(--radius); border: 0.5px dashed var(--border2); background: var(--bg2); flex: 1; }
+  .drop-zone.over { border-color: #60a5fa; background: var(--bg); }
+  .placed { display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 13px; padding: 3px 9px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg); color: var(--text); }
+  .trash-btn { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; cursor: pointer; opacity: .4; flex-shrink: 0; }
+  .trash-btn:hover { opacity: .85; }
+  .trash-btn svg { width: 12px; height: 12px; }
+  .type-input { flex: 1; min-width: 120px; font-family: var(--mono); font-size: 13px; padding: 8px 11px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg2); color: var(--text); outline: none; }
+  .type-input:focus { border-color: #60a5fa; background: var(--bg); }
+  .type-input:disabled { opacity: .5; }
+  .clear-btn { font-size: 11px; padding: 4px 11px; border-radius: 20px; border: 0.5px solid var(--border); background: transparent; color: var(--text3); cursor: pointer; font-family: var(--font); }
+  .clear-btn:hover { background: var(--bg2); }
+  .check-btn { font-size: 13px; font-weight: 500; padding: 8px 16px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: transparent; color: var(--text); cursor: pointer; font-family: var(--font); white-space: nowrap; }
+  .check-btn:hover { background: var(--bg2); }
+  .check-btn:disabled { opacity: .4; cursor: not-allowed; }
+  .feedback { font-size: 13px; margin-top: 7px; padding: 8px 12px; border-radius: var(--radius); display: none; line-height: 1.5; }
+  .fb-ok { background: #d1fae5; color: #065f46; display: block; }
+  .fb-err { background: #fee2e2; color: #991b1b; display: block; }
+  .fb-info { background: var(--bg2); color: var(--text3); display: block; border: 0.5px solid var(--border); }
+  @media (prefers-color-scheme: dark) {
+    .fb-ok { background: #064e3b; color: #6ee7b7; }
+    .fb-err { background: #7f1d1d; color: #fca5a5; }
+  }
+  .show-ans-btn { font-size: 12px; padding: 4px 11px; border-radius: 20px; border: 0.5px solid var(--border); background: transparent; color: var(--text3); cursor: pointer; margin-top: 6px; display: none; font-family: var(--font); }
+  .show-ans-btn:hover { background: var(--bg2); }
+  .ans-reveal { font-family: var(--mono); font-size: 13px; margin-top: 6px; color: var(--text3); display: none; }
+  .ans-reveal.on { display: block; }
+  .controls { display: flex; gap: 8px; margin-top: 1.1rem; flex-wrap: wrap; }
+  .next-btn { font-size: 14px; font-weight: 500; padding: 9px 20px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: transparent; color: var(--text); cursor: pointer; font-family: var(--font); }
+  .next-btn:hover { background: var(--bg2); }
+  .hint-btn { font-size: 13px; padding: 9px 15px; border: 0.5px solid var(--border); border-radius: var(--radius); background: transparent; color: var(--text2); cursor: pointer; font-family: var(--font); }
+  .hint-btn:hover { background: var(--bg2); }
+  .alg-hint { font-size: 13px; padding: 9px 13px; border-radius: var(--radius); background: var(--bg2); border: 0.5px solid var(--border); color: var(--text2); margin-top: .8rem; display: none; line-height: 1.5; }
+  .alg-hint.on { display: block; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="top-bar">
+  <span class="title">Kinematics: Deriving Expressions</span>
+  <span class="score-pill" id="score">Score: 0 / 0</span>
+</div>
+
+<div class="eqn-ref">
+  <div class="eqn-ref-title">Kinematic equations — start here every time</div>
+  <div class="eqn-list">
+    <span class="eqn-item">v = v₀ + at</span>
+    <span class="eqn-item">x = x₀ + v₀t + ½at²</span>
+    <span class="eqn-item">v² = v₀² + 2aΔx</span>
+  </div>
+</div>
+
+<div class="palette drag-mode" id="palette">
+  <div class="palette-top">
+    <span class="palette-title">Symbol palette</span>
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="btn-drag" onclick="setMode('drag')">Drag</button>
+      <button class="mode-btn" id="btn-type" onclick="setMode('type')">Type</button>
+    </div>
+  </div>
+  <div class="palette-sections">
+    <div class="palette-section"><span class="palette-label">Variables</span><div class="palette-tokens" id="pal-vars"></div></div>
+    <div class="palette-section"><span class="palette-label">Numbers</span><div class="palette-tokens" id="pal-nums"></div></div>
+    <div class="palette-section"><span class="palette-label">Operators</span><div class="palette-tokens" id="pal-ops"></div></div>
+  </div>
+  <div id="type-hint" style="display:none;">
+    <p class="type-hint">Type using keyboard, or click palette symbols to insert at cursor. Use <code>sqrt(...)</code> for √, <code>^2</code> for ², <code>/</code> for ÷. Adjacent symbols multiply — no × needed.</p>
+  </div>
+</div>
+
+<div class="filter-row">
+  <span class="filter-lbl">Filter:</span>
+  <button class="filter-btn on" onclick="setFilter('all',this)">All</button>
+  <button class="filter-btn" onclick="setFilter('ua',this)">Uniform accel.</button>
+  <button class="filter-btn" onclick="setFilter('cv',this)">Constant velocity</button>
+  <button class="filter-btn" onclick="setFilter('ff',this)">Free fall</button>
+  <button class="filter-btn" onclick="setFilter('2b',this)">Two bodies</button>
+</div>
+
+<span class="q-count-lbl" id="qcount">Scenario 1</span>
+
+<div class="card">
+  <div class="scenario-header">
+    <div class="scenario-text" id="stxt"></div>
+    <span class="badge" id="sbadge"></span>
+  </div>
+  <div class="hint-row">
+    <button class="reveal-btn" id="given-btn" onclick="toggleReveal('given-box','given-btn','Show given quantities','Hide given quantities')">Show given quantities</button>
+    <button class="reveal-btn" id="eqn-btn" onclick="toggleReveal('eqn-box','eqn-btn','Which equation applies?','Hide equation hint')">Which equation applies?</button>
+  </div>
+  <div class="reveal-box" id="given-box"></div>
+  <div class="reveal-box" id="eqn-box"></div>
+  <div id="q-container"></div>
+  <div class="alg-hint" id="alg-hint"></div>
+  <div class="controls">
+    <button class="next-btn" onclick="next()">Next scenario →</button>
+    <button class="hint-btn" onclick="showHint()">Algebra hint</button>
+  </div>
+</div>
+
+</div><!-- .page -->
+
+<script>
+const TRASH=`<svg viewBox="0 0 12 12" fill="none"><path d="M1.5 3h9M4.5 3V2a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v1M2.5 3l.5 7a.5.5 0 0 0 .5.5h5a.5.5 0 0 0 .5-.5l.5-7" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/><line x1="6" y1="5" x2="6" y2="8.5" stroke="currentColor" stroke-width="1" stroke-linecap="round"/><line x1="4.5" y1="5" x2="4.7" y2="8.5" stroke="currentColor" stroke-width="1" stroke-linecap="round"/><line x1="7.5" y1="5" x2="7.3" y2="8.5" stroke="currentColor" stroke-width="1" stroke-linecap="round"/></svg>`;
+
+const PAL={
+  vars:['x','x₀','v','v₀','a','g','t','T','H','h','L','d','d₀','Δx','Δh','Δt','v₁','vA','vB','vT','vM','aB','ℓ'],
+  nums:['0','1','2','½','¼'],
+  ops: ['+','−','÷','=','²','(',')','^','√']
+};
+
+const TOK_TEXT={'½':'(1/2)','¼':'(1/4)','²':'^2','÷':'/','−':'-','√':'sqrt(','v₀':'v0','x₀':'x0','v₁':'v1','d₀':'d0','Δx':'Dx','Δh':'Dh','Δt':'Dt','ℓ':'l'};
+function tokText(tok){return TOK_TEXT[tok]||tok;}
+
+const VAR_KEYS=[
+  ['v0','v0'],['x0','x0'],['v1','v1'],['d0','d0'],
+  ['vA','vA'],['vB','vB'],['vT','vT'],['vM','vM'],['aB','aB'],
+  ['Dx','Dx'],['Dh','Dh'],['Dt','Dt'],
+  ['v','v'],['a','a'],['g','g'],['t','t'],['T','T'],
+  ['H','H'],['h','h'],['L','L'],['d','d'],['l','l'],['x','x']
+];
+
+const TEST_SETS=[
+  {v0:3,a:5,g:10,t:4,T:4,H:10,h:5,L:8,d:6,d0:9,Dx:6,Dh:3,Dt:1.5,v1:15,vA:8,vB:3,vT:12,vM:4,l:2,v:6,x:12,x0:0,aB:2},
+  {v0:5,a:4,g:10,t:2,T:2,H:20,h:3,L:12,d:10,d0:6,Dx:10,Dh:5,Dt:2,v1:10,vA:12,vB:5,vT:15,vM:3,l:3,v:10,x:20,x0:0,aB:1},
+  {v0:2,a:6,g:10,t:3,T:3,H:5,h:8,L:4,d:4,d0:12,Dx:4,Dh:2,Dt:1,v1:4,vA:6,vB:2,vT:10,vM:2,l:1,v:4,x:8,x0:0,aB:3}
+];
+
+function lex(str){
+  let s=str.replace(/\s+/g,'')
+    .replace(/½/g,'(1/2)').replace(/¼/g,'(1/4)')
+    .replace(/÷/g,'/').replace(/−/g,'-').replace(/²/g,'^2')
+    .replace(/√/g,'sqrt')
+    .replace(/v₀/g,'v0').replace(/x₀/g,'x0').replace(/v₁/g,'v1').replace(/d₀/g,'d0')
+    .replace(/Δx/g,'Dx').replace(/Δh/g,'Dh').replace(/Δt/g,'Dt').replace(/ℓ/g,'l');
+  const toks=[];let i=0;
+  while(i<s.length){
+    const c=s[i];
+    if(/[0-9.]/.test(c)){let n='';while(i<s.length&&/[0-9.]/.test(s[i]))n+=s[i++];toks.push({type:'num',val:parseFloat(n)});continue;}
+    if(s.startsWith('sqrt',i)){i+=4;toks.push({type:'sqrt'});continue;}
+    let matched=false;
+    for(const [name,key] of VAR_KEYS){if(s.startsWith(name,i)){toks.push({type:'var',key});i+=name.length;matched=true;break;}}
+    if(matched)continue;
+    if(c==='+'){toks.push({type:'op',val:'+'});i++;continue;}
+    if(c==='-'){toks.push({type:'op',val:'-'});i++;continue;}
+    if(c==='*'){toks.push({type:'op',val:'*'});i++;continue;}
+    if(c==='/'){toks.push({type:'op',val:'/'});i++;continue;}
+    if(c==='^'){toks.push({type:'op',val:'^'});i++;continue;}
+    if(c==='('){toks.push({type:'lparen'});i++;continue;}
+    if(c===')'){toks.push({type:'rparen'});i++;continue;}
+    i++;
+  }
+  return toks;
+}
+
+function insertImplicit(toks){
+  const out=[];
+  for(let i=0;i<toks.length;i++){
+    out.push(toks[i]);
+    if(i+1<toks.length){
+      const a=toks[i],b=toks[i+1];
+      const aEnds=a.type==='num'||a.type==='var'||a.type==='rparen';
+      const bStarts=b.type==='num'||b.type==='var'||b.type==='lparen'||b.type==='sqrt';
+      if(aEnds&&bStarts)out.push({type:'op',val:'*'});
+    }
+  }
+  return out;
+}
+
+function parse(toks,asgn){
+  let pos=0;
+  function peek(){return toks[pos];}
+  function consume(){return toks[pos++];}
+  function parseExpr(){let v=parseTerm();while(pos<toks.length&&peek().type==='op'&&(peek().val==='+'||peek().val==='-')){const op=consume().val;const r=parseTerm();v=op==='+'?v+r:v-r;}return v;}
+  function parseTerm(){let v=parsePow();while(pos<toks.length&&peek().type==='op'&&(peek().val==='*'||peek().val==='/')){const op=consume().val;const r=parsePow();v=op==='*'?v*r:v/r;}return v;}
+  function parsePow(){let base=parseUnary();if(pos<toks.length&&peek().type==='op'&&peek().val==='^'){consume();base=Math.pow(base,parseUnary());}return base;}
+  function parseUnary(){if(pos<toks.length&&peek().type==='op'&&peek().val==='-'){consume();return -parseAtom();}return parseAtom();}
+  function parseAtom(){
+    if(pos>=toks.length)return 0;
+    const t=peek();
+    if(t.type==='num'){consume();return t.val;}
+    if(t.type==='var'){consume();return asgn[t.key]??1;}
+    if(t.type==='sqrt'){consume();if(pos<toks.length&&peek().type==='lparen'){consume();const v=parseExpr();if(pos<toks.length&&peek().type==='rparen')consume();return Math.sqrt(v);}return Math.sqrt(parseAtom());}
+    if(t.type==='lparen'){consume();const v=parseExpr();if(pos<toks.length&&peek().type==='rparen')consume();return v;}
+    consume();return 1;
+  }
+  try{return parseExpr();}catch(e){return NaN;}
+}
+
+function evalStr(str,asgn){
+  try{return parse(insertImplicit(lex(str)),asgn);}catch(e){return NaN;}
+}
+
+function dragToStr(tokens){
+  return tokens.map(t=>{
+    const m={'²':'^2','÷':'/','−':'-','½':'(1/2)','¼':'(1/4)','√':'sqrt','v₀':'v0','x₀':'x0','v₁':'v1','d₀':'d0','Δx':'Dx','Δh':'Dh','Δt':'Dt','ℓ':'l'};
+    return m[t]||t;
+  }).join('');
+}
+
+function checkAnswer(getStr,canonFn){
+  let matches=0;
+  for(const asgn of TEST_SETS){
+    try{
+      const sv=evalStr(getStr(),asgn),cv=canonFn(asgn);
+      if(!isFinite(sv)||!isFinite(cv)||isNaN(sv)||isNaN(cv))continue;
+      if(Math.abs(sv-cv)<1e-6*(Math.abs(cv)+1))matches++;
+    }catch(e){}
+  }
+  return matches>=2;
+}
+
+const SCENARIOS=[
+  {type:'ua',text:'A car starts from rest and accelerates uniformly at rate a along a straight road.',
+   given:['v₀ = 0','a','t'],eqnHint:'Start with v = v₀ + at and x = x₀ + v₀t + ½at². What drops out when v₀ = 0?',
+   questions:[
+     {lhs:'v =',ask:'Write an expression for the velocity at time t.',display:'at',fn:v=>v.a*v.t,hint:'With v₀ = 0, v = v₀ + at simplifies directly.'},
+     {lhs:'x =',ask:'Write an expression for the displacement at time t.',display:'½at²',fn:v=>0.5*v.a*v.t*v.t,hint:'x = x₀ + v₀t + ½at². With v₀ = 0 and x₀ = 0, two terms vanish.'}
+   ]},
+  {type:'ua',text:'An object has initial velocity v₀ and decelerates at constant rate a (a > 0) until it stops.',
+   given:['v₀','a (deceleration magnitude)','v_final = 0'],eqnHint:'Which kinematic equation connects v, v₀, a, and distance without needing t?',
+   questions:[
+     {lhs:'d =',ask:'Derive an expression for the stopping distance.',display:'v₀²/(2a)',fn:v=>(v.v0*v.v0)/(2*v.a),hint:'Use v² = v₀² − 2ad. Set v = 0 and solve for d.'}
+   ]},
+  {type:'ua',text:'A block slides from rest down a frictionless ramp of length L. The net acceleration along the ramp is a.',
+   given:['v₀ = 0','a','L'],eqnHint:'No time is given — which kinematic equation does not involve t?',
+   questions:[
+     {lhs:'v =',ask:'Derive the speed at the bottom of the ramp.',display:'sqrt(2aL)',fn:v=>Math.sqrt(2*v.a*v.L),hint:'v² = 2aL (v₀ = 0). Take the square root.'},
+     {lhs:'t =',ask:'Now find the time to reach the bottom.',display:'sqrt(2L/a)',fn:v=>Math.sqrt(2*v.L/v.a),hint:'Use x = ½at² with x = L: t² = 2L/a.'}
+   ]},
+  {type:'ua',text:'A rocket fires its engines from rest, producing constant net upward acceleration a for time T. After engine cutoff it decelerates due to gravity g.',
+   given:['v₀ = 0','a (upward during burn)','T','g (after cutoff)'],eqnHint:'Two phases. Burn: v = v₀ + at. Coast: cutoff velocity is new v₀, deceleration is g.',
+   questions:[
+     {lhs:'v₁ =',ask:'Write the velocity when engines cut off.',display:'aT',fn:v=>v.a*v.T,hint:'Starting from rest: v₁ = 0 + aT.'},
+     {lhs:'Δh =',ask:'After cutoff the rocket decelerates at g. Write the additional height gained before it stops.',display:'v₁²/(2g)',fn:v=>(v.v1*v.v1)/(2*v.g),hint:'Use v² = v₁² − 2gΔh. Set v = 0 and solve for Δh.'}
+   ]},
+  {type:'cv',text:'A train travels at constant velocity v₀ along a straight track, starting at x₀ = 0.',
+   given:['v₀','x₀ = 0'],eqnHint:'Start with x = x₀ + v₀t + ½at². Consider what you know about acceleration at constant velocity.',
+   questions:[
+     {lhs:'x =',ask:'Write the position x of the train at time t.',display:'v₀t',fn:v=>v.v0*v.t,hint:'What is the acceleration when velocity is constant? Substitute that into x = x₀ + v₀t + ½at².'}
+   ]},
+  {type:'cv',text:'A train of length ℓ moves at constant speed v. The front enters a tunnel of length L at t = 0.',
+   given:['v','ℓ (train length)','L (tunnel length)'],eqnHint:'Use the position equation. Think about how far the front, then the rear, must travel.',
+   questions:[
+     {lhs:'t₁ =',ask:'How long until the rear of the train enters the tunnel?',display:'ℓ/v',fn:v=>v.l/v.v,hint:'The rear must travel distance ℓ to reach the tunnel entrance.'},
+     {lhs:'Δt =',ask:'Write the total time the train is at least partially inside the tunnel.',display:'(L+ℓ)/v',fn:v=>(v.L+v.l)/v.v,hint:'The train clears when the rear exits — the rear travels L + ℓ total.'}
+   ]},
+  {type:'ff',text:'A ball is dropped from rest from height H. Take g as the magnitude of gravitational acceleration, downward positive.',
+   given:['v₀ = 0','a = g','H'],eqnHint:'H = ½gT² (from x = ½at² with v₀ = 0). For speed use v² = 2gH.',
+   questions:[
+     {lhs:'T =',ask:'Derive the time T to reach the ground.',display:'sqrt(2H/g)',fn:v=>Math.sqrt(2*v.H/v.g),hint:'H = ½gT² → T² = 2H/g → T = sqrt(2H/g).'},
+     {lhs:'v =',ask:'Write the speed when it hits the ground.',display:'sqrt(2gH)',fn:v=>Math.sqrt(2*v.g*v.H),hint:'v² = 2gH → v = sqrt(2gH).'}
+   ]},
+  {type:'ff',text:'A ball is thrown straight upward from the ground with initial speed v₀. Take upward as positive.',
+   given:['v₀ (upward)','a = −g','x₀ = 0'],eqnHint:'At the peak the ball momentarily stops — use that condition.',
+   questions:[
+     {lhs:'H =',ask:'Derive the maximum height H.',display:'v₀²/(2g)',fn:v=>(v.v0*v.v0)/(2*v.g),hint:'At the peak v = 0. Use v² = v₀² − 2gH with v = 0.'},
+     {lhs:'t_up =',ask:'Write the time to reach maximum height.',display:'v₀/g',fn:v=>v.v0/v.g,hint:'At the peak v = 0. Use v = v₀ − gt and set v = 0.'}
+   ]},
+  {type:'ff',text:'An object is thrown downward from height H with initial speed v₀. Take downward as positive.',
+   given:['v₀ (downward)','a = g','H'],eqnHint:'Use v² = v₀² + 2aΔx with a = g and Δx = H.',
+   questions:[
+     {lhs:'v =',ask:'Write the speed when it hits the ground.',display:'sqrt(v₀²+2gH)',fn:v=>Math.sqrt(v.v0*v.v0+2*v.g*v.H),hint:'v² = v₀² + 2gH. Take the square root.'}
+   ]},
+  {type:'ff',text:'A ball is thrown upward with speed v₀ from a platform at height h. It rises then falls to the ground.',
+   given:['v₀ (upward)','a = −g','initial height h'],eqnHint:'Find extra height above the platform (v = 0 at peak), then add h.',
+   questions:[
+     {lhs:'Δh =',ask:'Write the extra height gained above the platform.',display:'v₀²/(2g)',fn:v=>(v.v0*v.v0)/(2*v.g),hint:'At the peak v = 0: use v² = v₀² − 2gΔh.'},
+     {lhs:'H_max =',ask:'Write the total maximum height above the ground.',display:'h+v₀²/(2g)',fn:v=>v.h+(v.v0*v.v0)/(2*v.g),hint:'H_max = h + Δh.'}
+   ]},
+  {type:'2b',text:'A police car is stationary. At t = 0 a speeder passes at constant velocity v₀. The police car immediately accelerates from rest at rate a.',
+   given:['Speeder: constant v₀, x = 0 at t = 0','Police: x = 0, v = 0, acceleration a'],eqnHint:'Write position equations for each. They meet when positions are equal.',
+   questions:[
+     {lhs:'x_s =',ask:'Write the position of the speeder at time t.',display:'v₀t',fn:v=>v.v0*v.t,hint:'Constant velocity from x = 0.'},
+     {lhs:'x_p =',ask:'Write the position of the police car at time t.',display:'½at²',fn:v=>0.5*v.a*v.t*v.t,hint:'Starts from rest with acceleration a.'},
+     {lhs:'t* =',ask:'Derive the time t* when the police car catches the speeder.',display:'2v₀/a',fn:v=>2*v.v0/v.a,hint:'Set ½at² = v₀t, cancel t (t≠0): ½at = v₀ → t = 2v₀/a.'}
+   ]},
+  {type:'2b',text:'Car A is a distance d₀ behind car B at t = 0. Car A moves at constant velocity vA; car B at constant velocity vB, where vA > vB.',
+   given:['A: x = 0, velocity vA','B: x = d₀, velocity vB','vA > vB'],eqnHint:'Write position equations and set them equal.',
+   questions:[
+     {lhs:'t* =',ask:'Write the time t* at which A catches B.',display:'d₀/(vA−vB)',fn:v=>v.d0/(v.vA-v.vB),hint:'xA = vAt, xB = d₀+vBt. Set equal: t(vA−vB) = d₀.'},
+     {lhs:'x* =',ask:'Write the position x* where A catches B.',display:'vA·d₀/(vA−vB)',fn:v=>v.vA*v.d0/(v.vA-v.vB),hint:'Substitute t* into xA = vAt*.'}
+   ]},
+  {type:'2b',text:'Object A starts from rest at x = 0 with acceleration a. Object B starts from rest at x = d₀ with acceleration aB < a. Both move in the positive direction.',
+   given:['A: x₀=0, v₀=0, acceleration a','B: x₀=d₀, v₀=0, acceleration aB','a > aB'],eqnHint:'Write xA and xB using x = x₀+½at². Set xA = xB and solve for t.',
+   questions:[
+     {lhs:'xA =',ask:'Write the position of object A at time t.',display:'½at²',fn:v=>0.5*v.a*v.t*v.t,hint:'A from rest at origin: xA = ½at².'},
+     {lhs:'xB =',ask:'Write the position of object B at time t.',display:'d₀+½aBt²',fn:v=>v.d0+0.5*v.aB*v.t*v.t,hint:'B from rest at d₀: xB = d₀+½aBt².'},
+     {lhs:'t* =',ask:'Derive the time t* at which A catches B.',display:'sqrt(2d₀/(a−aB))',fn:v=>Math.sqrt(2*v.d0/(v.a-v.aB)),hint:'½(a−aB)t² = d₀ → t = sqrt(2d₀/(a−aB)).'}
+   ]},
+  {type:'2b',text:'Runner A starts from rest at x = 0 with acceleration a. Runner B starts from the same point at constant velocity vB. A eventually overtakes B.',
+   given:['A: x₀=0, v₀=0, acceleration a','B: x₀=0, constant velocity vB'],eqnHint:'Write position equations, set equal, solve.',
+   questions:[
+     {lhs:'t* =',ask:'Find the time t* when A overtakes B.',display:'2vB/a',fn:v=>2*v.vB/v.a,hint:'½at² = vBt → cancel t → ½at = vB → t = 2vB/a.'},
+     {lhs:'x* =',ask:'Find the position x* where the overtake happens.',display:'2vB²/a',fn:v=>2*v.vB*v.vB/v.a,hint:'Substitute t* = 2vB/a into xB = vBt.'}
+   ]},
+  {type:'2b',text:'Object A starts at x = 0 moving at constant vA (positive). Object B starts at x = L moving at constant vB toward A (negative direction).',
+   given:['A: x₀=0, velocity vA','B: x₀=L, velocity vB (moves negative)','no acceleration'],eqnHint:'Write position equations for each. They meet when xA = xB.',
+   questions:[
+     {lhs:'t* =',ask:'Derive the time t* at which they meet.',display:'L/(vA+vB)',fn:v=>v.L/(v.vA+v.vB),hint:'xA = vAt, xB = L−vBt. Set equal: t(vA+vB) = L.'},
+     {lhs:'x* =',ask:'Derive the position x* where they meet.',display:'vA·L/(vA+vB)',fn:v=>v.vA*v.L/(v.vA+v.vB),hint:'Substitute t* into xA = vAt*.'}
+   ]},
+  {type:'2b',text:'A ball is dropped from rest from height H. At the same instant, another ball is thrown upward from the ground with speed v₀. Take upward as positive, origin at ground.',
+   given:['Ball 1: dropped from H, v₀=0, a=−g','Ball 2: thrown up, speed v₀, a=−g'],eqnHint:'Write position equations for each and set them equal.',
+   questions:[
+     {lhs:'x₁ =',ask:'Write the position of the dropped ball.',display:'H−½gt²',fn:v=>v.H-0.5*v.g*v.t*v.t,hint:'Starts at H and falls: x₁ = H−½gt².'},
+     {lhs:'x₂ =',ask:'Write the position of the thrown ball.',display:'v₀t−½gt²',fn:v=>v.v0*v.t-0.5*v.g*v.t*v.t,hint:'Starts at 0, moves up: x₂ = v₀t−½gt².'},
+     {lhs:'t* =',ask:'Derive the time t* at which they meet. Notice something cancels.',display:'H/v₀',fn:v=>v.H/v.v0,hint:'Set x₁=x₂: H−½gt²=v₀t−½gt². The ½gt² terms cancel. Solve: H=v₀t.'}
+   ]},
+  {type:'2b',text:'A train of length ℓ moves at speed vT. A person walks at speed vM in the same direction. The front of the train is level with the person at t = 0. vT > vM.',
+   given:['Train: length ℓ, speed vT','Person: speed vM','front level with person at t=0'],eqnHint:'Think about the closing speed of the train relative to the person.',
+   questions:[
+     {lhs:'t* =',ask:'Derive the time for the train to completely pass the person.',display:'ℓ/(vT−vM)',fn:v=>v.l/(v.vT-v.vM),hint:'In the person\'s frame the train closes at (vT−vM) and must cover length ℓ.'}
+   ]},
+  {type:'2b',text:'Two stones are dropped from rest from the same bridge — stone 1 at t = 0, stone 2 at t = Δt later. Downward positive.',
+   given:['Stone 1: dropped at t=0','Stone 2: dropped at t=Δt','g downward, both from rest'],eqnHint:'Write displacement equations. Stone 2 has only been falling for (t−Δt) seconds.',
+   questions:[
+     {lhs:'x₁ =',ask:'Write the downward displacement of stone 1 at time t.',display:'½gt²',fn:v=>0.5*v.g*v.t*v.t,hint:'Stone 1: x₁ = ½gt².'},
+     {lhs:'x₂ =',ask:'Write the downward displacement of stone 2 at time t (t > Δt).',display:'½g(t−Δt)²',fn:v=>0.5*v.g*(v.t-v.Dt)*(v.t-v.Dt),hint:'Stone 2 has fallen for (t−Δt): x₂ = ½g(t−Δt)².'},
+     {lhs:'Δx =',ask:'Write the separation x₁−x₂.',display:'gΔt(t−½Δt)',fn:v=>v.g*v.Dt*(v.t-0.5*v.Dt),hint:'Expand ½gt²−½g(t−Δt)² and simplify — you\'ll get a clean factored form.'}
+   ]}
+];
+
+let pool=[],idx=0,sc=0,att=0,qStates=[],dragging=null,inputMode='drag',focusedInput=null;
+
+function buildPalette(){
+  [['pal-vars',PAL.vars],['pal-nums',PAL.nums],['pal-ops',PAL.ops]].forEach(([id,toks])=>{
+    const el=document.getElementById(id);el.innerHTML='';
+    toks.forEach(tok=>{
+      const t=document.createElement('span');
+      t.className='token';t.textContent=tok;t.dataset.tok=tok;
+      if(inputMode==='drag'){
+        t.draggable=true;
+        t.addEventListener('dragstart',()=>{dragging=tok;t.classList.add('dragging');});
+        t.addEventListener('dragend',()=>t.classList.remove('dragging'));
+        t.addEventListener('touchstart',onTouchStart,{passive:true});
+      }else{
+        t.addEventListener('click',()=>{
+          const inp=focusedInput||document.querySelector('.type-input:not(:disabled)');
+          if(inp)insertAtCursor(inp,tokText(tok));
+        });
+      }
+      el.appendChild(t);
+    });
+  });
+}
+
+function insertAtCursor(inp,text){
+  const s=inp.selectionStart,e=inp.selectionEnd,v=inp.value;
+  inp.value=v.slice(0,s)+text+v.slice(e);
+  inp.selectionStart=inp.selectionEnd=s+text.length;
+  inp.focus();
+}
+
+function setMode(mode){
+  inputMode=mode;
+  document.getElementById('btn-drag').classList.toggle('active',mode==='drag');
+  document.getElementById('btn-type').classList.toggle('active',mode==='type');
+  document.getElementById('type-hint').style.display=mode==='type'?'block':'none';
+  const pal=document.getElementById('palette');
+  pal.classList.toggle('drag-mode',mode==='drag');
+  pal.classList.toggle('type-mode',mode==='type');
+  load();
+}
+
+let touchTok=null,touchClone=null;
+function onTouchStart(e){
+  touchTok=this.dataset.tok;
+  const r=this.getBoundingClientRect();
+  touchClone=this.cloneNode(true);
+  Object.assign(touchClone.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',opacity:'.75',pointerEvents:'none',zIndex:'999'});
+  document.body.appendChild(touchClone);
+  document.addEventListener('touchmove',onTouchMove,{passive:false});
+  document.addEventListener('touchend',onTouchEnd);
+}
+function onTouchMove(e){
+  e.preventDefault();
+  const t=e.touches[0];
+  if(touchClone){touchClone.style.left=(t.clientX-30)+'px';touchClone.style.top=(t.clientY-15)+'px';}
+  document.querySelectorAll('.drop-zone').forEach(z=>{
+    const r=z.getBoundingClientRect();
+    z.classList.toggle('over',t.clientX>r.left&&t.clientX<r.right&&t.clientY>r.top&&t.clientY<r.bottom);
+  });
+}
+function onTouchEnd(e){
+  document.removeEventListener('touchmove',onTouchMove);
+  document.removeEventListener('touchend',onTouchEnd);
+  if(touchClone){document.body.removeChild(touchClone);touchClone=null;}
+  const pt=e.changedTouches[0];
+  document.querySelectorAll('.drop-zone').forEach(z=>{
+    z.classList.remove('over');
+    const r=z.getBoundingClientRect();
+    if(pt.clientX>r.left&&pt.clientX<r.right&&pt.clientY>r.top&&pt.clientY<r.bottom){
+      const qi=parseInt(z.dataset.qi);
+      if(!qStates[qi].done)dropToken(touchTok,qi);
+    }
+  });
+}
+
+function makePlaced(tok,qi){
+  const p=document.createElement('span');p.className='placed';
+  p.appendChild(document.createTextNode(tok));
+  const tb=document.createElement('span');tb.className='trash-btn';tb.title='Remove';tb.innerHTML=TRASH;
+  tb.addEventListener('click',()=>{if(!qStates[qi].done)p.remove();});
+  p.appendChild(tb);
+  return p;
+}
+function dropToken(tok,qi){if(qStates[qi].done)return;document.getElementById('zone-'+qi).appendChild(makePlaced(tok,qi));}
+function getDragTokens(qi){return Array.from(document.getElementById('zone-'+qi).querySelectorAll('.placed')).map(p=>p.childNodes[0].textContent.trim());}
+function clearZone(qi){if(!qStates[qi].done)document.getElementById('zone-'+qi).innerHTML='';}
+
+function load(){
+  buildPalette();focusedInput=null;
+  const s=pool[idx];
+  document.getElementById('stxt').textContent=s.text;
+  const b=document.getElementById('sbadge');
+  const labels={ua:'Uniform accel.',cv:'Constant velocity',ff:'Free fall','2b':'Two bodies'};
+  const cls={ua:'badge-ua',cv:'badge-cv',ff:'badge-ff','2b':'badge-2b'};
+  b.textContent=labels[s.type];b.className='badge '+cls[s.type];
+  document.getElementById('given-box').className='reveal-box';
+  document.getElementById('given-box').innerHTML='<strong style="font-size:12px;color:var(--text3);">Given: </strong>'+s.given.map(g=>`<span class="var-pill">${g}</span>`).join('');
+  document.getElementById('eqn-box').className='reveal-box';
+  document.getElementById('eqn-box').textContent=s.eqnHint;
+  document.getElementById('given-btn').textContent='Show given quantities';
+  document.getElementById('eqn-btn').textContent='Which equation applies?';
+  document.getElementById('alg-hint').className='alg-hint';
+  qStates=s.questions.map(()=>({done:false}));
+  const qc=document.getElementById('q-container');qc.innerHTML='';
+  s.questions.forEach((q,i)=>{
+    const prefix=s.questions.length>1?`Part ${String.fromCharCode(97+i)}: `:'';
+    const div=document.createElement('div');div.className='q-block';
+    if(inputMode==='drag'){
+      div.innerHTML=`
+        <div class="q-label">${prefix}${q.ask}</div>
+        <div class="q-sub">Drag symbols from the palette. Adjacent tokens multiply automatically.</div>
+        <div class="answer-row">
+          <span class="ans-lhs">${q.lhs}</span>
+          <div class="drop-zone" id="zone-${i}" data-qi="${i}"></div>
+          <button class="clear-btn" onclick="clearZone(${i})">Clear</button>
+          <button class="check-btn" id="chk-${i}" onclick="checkQ(${i})">Check</button>
+        </div>
+        <div class="feedback" id="fb-${i}"></div>
+        <button class="show-ans-btn" id="sab-${i}" onclick="showAns(${i})">Show answer</button>
+        <div class="ans-reveal" id="ar-${i}"></div>`;
+      qc.appendChild(div);
+      const zone=div.querySelector('#zone-'+i);
+      zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('over');});
+      zone.addEventListener('dragleave',()=>zone.classList.remove('over'));
+      zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('over');if(dragging&&!qStates[i].done)dropToken(dragging,i);});
+    }else{
+      div.innerHTML=`
+        <div class="q-label">${prefix}${q.ask}</div>
+        <div class="q-sub">Type below, or click palette symbols to insert at cursor.</div>
+        <div class="answer-row">
+          <span class="ans-lhs">${q.lhs}</span>
+          <input class="type-input" id="tinput-${i}" autocomplete="off" spellcheck="false" placeholder="e.g. v0^2/(2g)">
+          <button class="check-btn" id="chk-${i}" onclick="checkQ(${i})">Check</button>
+        </div>
+        <div class="feedback" id="fb-${i}"></div>
+        <button class="show-ans-btn" id="sab-${i}" onclick="showAns(${i})">Show answer</button>
+        <div class="ans-reveal" id="ar-${i}"></div>`;
+      qc.appendChild(div);
+      const inp=div.querySelector('#tinput-'+i);
+      inp.addEventListener('focus',()=>focusedInput=inp);
+      inp.addEventListener('blur',()=>{if(focusedInput===inp)focusedInput=null;});
+      inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!qStates[i].done)checkQ(i);});
+    }
+  });
+  document.getElementById('qcount').textContent=`Scenario ${idx+1} of ${pool.length}`;
+}
+
+function checkQ(qi){
+  if(qStates[qi].done)return;
+  const q=pool[idx].questions[qi];
+  const fb=document.getElementById('fb-'+qi);
+  let getStr;
+  if(inputMode==='drag'){
+    const toks=getDragTokens(qi);
+    if(!toks.length){fb.className='feedback fb-info';fb.textContent='Drag at least one token into the answer box first.';return;}
+    getStr=()=>dragToStr(toks);
+  }else{
+    const raw=document.getElementById('tinput-'+qi).value.trim();
+    if(!raw){fb.className='feedback fb-info';fb.textContent='Type an expression first.';return;}
+    getStr=()=>raw;
+  }
+  att++;
+  if(checkAnswer(getStr,q.fn)){
+    sc++;fb.className='feedback fb-ok';fb.textContent='✓ Correct! Canonical form: '+q.lhs+' '+q.display;
+    qStates[qi].done=true;document.getElementById('chk-'+qi).disabled=true;
+    if(inputMode==='type'){const inp=document.getElementById('tinput-'+qi);if(inp)inp.disabled=true;}
+  }else{
+    fb.className='feedback fb-err';fb.textContent='✗ Not quite — check your algebra.';
+    document.getElementById('sab-'+qi).style.display='inline-block';
+  }
+  updateScore();
+}
+function showAns(qi){
+  const q=pool[idx].questions[qi];
+  document.getElementById('ar-'+qi).textContent='Answer: '+q.lhs+' '+q.display;
+  document.getElementById('ar-'+qi).className='ans-reveal on';
+  document.getElementById('sab-'+qi).style.display='none';
+  document.getElementById('chk-'+qi).disabled=true;
+  if(inputMode==='type'){const inp=document.getElementById('tinput-'+qi);if(inp)inp.disabled=true;}
+  qStates[qi].done=true;
+}
+function showHint(){
+  const s=pool[idx];
+  const qi=Math.max(0,s.questions.findIndex((_,i)=>!qStates[i].done));
+  const h=document.getElementById('alg-hint');
+  h.textContent='💡 '+s.questions[qi].hint;h.className='alg-hint on';
+}
+function toggleReveal(boxId,btnId,show,hide){
+  const b=document.getElementById(boxId);b.classList.toggle('shown');
+  document.getElementById(btnId).textContent=b.classList.contains('shown')?hide:show;
+}
+function next(){idx=(idx+1)%pool.length;load();}
+function updateScore(){document.getElementById('score').textContent=`Score: ${sc} / ${att}`;}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
+function setFilter(f,btn){
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  pool=f==='all'?[...SCENARIOS]:SCENARIOS.filter(s=>s.type===f);
+  shuffle(pool);idx=0;sc=0;att=0;updateScore();load();
+}
+
+pool=[...SCENARIOS];shuffle(pool);load();
+</script>
+</body>
+</html>
